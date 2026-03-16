@@ -1,0 +1,22 @@
+# Build
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package.json package-lock.json* ./
+RUN npm ci
+COPY . .
+ARG VITE_AUTH_API_URL=http://localhost:3001
+ARG VITE_USER_API_URL=http://localhost:3002
+ARG VITE_POST_API_URL=http://localhost:3003
+ARG VITE_WS_LIKES_URL=http://localhost:3003
+ENV VITE_AUTH_API_URL=$VITE_AUTH_API_URL
+ENV VITE_USER_API_URL=$VITE_USER_API_URL
+ENV VITE_POST_API_URL=$VITE_POST_API_URL
+ENV VITE_WS_LIKES_URL=$VITE_WS_LIKES_URL
+RUN npm run build
+
+# Serve
+FROM nginx:alpine
+COPY --from=builder /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 5173
+CMD ["nginx", "-g", "daemon off;"]

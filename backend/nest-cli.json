@@ -1,0 +1,29 @@
+{
+  "collection": "@nestjs/schematics",
+  "sourceRoot": "src",
+  "monorepo": true,
+  "root": "services",
+  "projects": {
+    "auth-service": {
+      "type": "application",
+      "root": "services/auth-service",
+      "sourceRoot": "services/auth-service/src"
+    },
+    "user-service": {
+      "type": "application",
+      "root": "services/user-service",
+      "sourceRoot": "services/user-service/src"
+    },
+    "post-service": {
+      "type": "application",
+      "root": "services/post-service",
+      "sourceRoot": "services/post-service/src"
+    },
+    "seeder-service": {
+      "type": "application",
+      "root": "services/seeder-service",
+      "sourceRoot": "services/seeder-service/src"
+    }
+  }
+}
+
