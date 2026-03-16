@@ -4,21 +4,44 @@ const client_1 = require("@prisma/client");
 const bcrypt = require("bcrypt");
 const prisma = new client_1.PrismaClient();
 const SP_ADD_LIKE_AND_LOG = `
-CREATE OR REPLACE FUNCTION sp_add_like_and_log(p_user_id INTEGER, p_post_id INTEGER)
+CREATE OR REPLACE FUNCTION sp_add_like_and_log(p_user_id BIGINT, p_post_id BIGINT)
 RETURNS VOID AS $$
 BEGIN
   INSERT INTO "Like" ("userId", "postId", "createdAt") VALUES (p_user_id, p_post_id, NOW());
   INSERT INTO "AuditLog" (action, "userId", "postId", "createdAt") VALUES ('LIKE_POST', p_user_id, p_post_id, NOW());
+EXCEPTION
+  WHEN unique_violation THEN
+    RAISE EXCEPTION 'LIKE_ALREADY_EXISTS';
+  WHEN foreign_key_violation THEN
+    RAISE EXCEPTION 'INVALID_USER_OR_POST';
 END;
 $$ LANGUAGE plpgsql;
 `;
 const SP_GET_USER_FEED = `
-CREATE OR REPLACE FUNCTION sp_get_user_feed(p_user_id INTEGER)
-RETURNS TABLE (post_id INTEGER, author_id INTEGER, message TEXT, created_at TIMESTAMP WITHOUT TIME ZONE, likes_count INTEGER) AS $$
+CREATE OR REPLACE FUNCTION sp_get_user_feed(p_user_id BIGINT)
+RETURNS TABLE (
+  post_id INTEGER,
+  author_id INTEGER,
+  message TEXT,
+  created_at TIMESTAMP WITHOUT TIME ZONE,
+  likes_count INTEGER,
+  author_first_name TEXT,
+  author_last_name TEXT,
+  author_alias TEXT
+) AS $$
 BEGIN
   RETURN QUERY
-  SELECT p.id, p."authorId", p.message, p."createdAt", COALESCE(lc.cnt, 0)::INTEGER
+  SELECT
+    p.id AS post_id,
+    p."authorId" AS author_id,
+    p.message,
+    p."createdAt" AS created_at,
+    COALESCE(lc.cnt, 0)::INTEGER AS likes_count,
+    u."firstName" AS author_first_name,
+    u."lastName" AS author_last_name,
+    u."alias" AS author_alias
   FROM "Post" p
+  JOIN "User" u ON u.id = p."authorId"
   LEFT JOIN (SELECT "postId", COUNT(*) AS cnt FROM "Like" GROUP BY "postId") lc ON lc."postId" = p.id
   WHERE p."authorId" <> p_user_id ORDER BY p."createdAt" DESC;
 END;

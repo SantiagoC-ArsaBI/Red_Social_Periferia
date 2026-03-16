@@ -9,6 +9,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
+const health_module_1 = require("./health/health.module");
 const user_module_1 = require("./user/user.module");
 const prisma_module_1 = require("./prisma/prisma.module");
 let AppModule = class AppModule {
@@ -20,6 +21,7 @@ exports.AppModule = AppModule = __decorate([
             config_1.ConfigModule.forRoot({ isGlobal: true }),
             prisma_module_1.PrismaModule,
             user_module_1.UserModule,
+            health_module_1.HealthModule,
         ],
     })
 ], AppModule);

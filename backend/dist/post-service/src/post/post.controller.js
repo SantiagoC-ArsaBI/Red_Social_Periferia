@@ -18,6 +18,7 @@ const swagger_1 = require("@nestjs/swagger");
 const jwt_auth_guard_1 = require("../common/jwt-auth.guard");
 const create_post_dto_1 = require("./dto/create-post.dto");
 const post_response_dto_1 = require("./dto/post-response.dto");
+const parse_positive_int_pipe_1 = require("./parse-positive-int.pipe");
 const post_service_1 = require("./post.service");
 let PostController = class PostController {
     constructor(postService) {
@@ -61,6 +62,7 @@ __decorate([
 ], PostController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Post)(':id/like'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, swagger_1.ApiBearerAuth)(),
     (0, swagger_1.ApiOperation)({ summary: 'Dar like (ejecuta sp_add_like_and_log y notifica por WebSocket)' }),
@@ -68,7 +70,7 @@ __decorate([
     (0, swagger_1.ApiResponse)({ status: 400, description: 'Ya diste like' }),
     (0, swagger_1.ApiResponse)({ status: 404, description: 'Publicación no encontrada' }),
     __param(0, (0, common_1.Req)()),
-    __param(1, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(1, (0, common_1.Param)('id', parse_positive_int_pipe_1.ParsePositiveIntPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, Number]),
     __metadata("design:returntype", Promise)

@@ -34,15 +34,20 @@ let PostService = class PostService {
         return this.toResponse(post);
     }
     async findAllOtherUsersPosts(userId) {
-        const posts = await this.prisma.post.findMany({
-            where: { authorId: { not: userId } },
-            orderBy: { createdAt: 'desc' },
-            include: {
-                author: { select: { id: true, firstName: true, lastName: true, alias: true } },
-                _count: { select: { likes: true } },
+        const rows = await this.prisma.$queryRaw(client_1.Prisma.sql `SELECT * FROM sp_get_user_feed(${userId})`);
+        return rows.map((r) => ({
+            id: r.post_id,
+            message: r.message,
+            createdAt: r.created_at.toISOString(),
+            authorId: r.author_id,
+            author: {
+                id: r.author_id,
+                firstName: r.author_first_name,
+                lastName: r.author_last_name,
+                alias: r.author_alias,
             },
-        });
-        return posts.map((p) => this.toResponse(p));
+            likesCount: r.likes_count,
+        }));
     }
     async addLike(userId, postId) {
         const post = await this.prisma.post.findUnique({
@@ -52,13 +57,19 @@ let PostService = class PostService {
         if (!post) {
             throw new common_1.NotFoundException('Publicación no encontrada');
         }
-        const existing = await this.prisma.like.findFirst({
-            where: { userId, postId },
-        });
-        if (existing) {
-            throw new common_1.BadRequestException('Ya diste like a esta publicación');
+        try {
+            await this.prisma.$executeRaw(client_1.Prisma.sql `SELECT sp_add_like_and_log(${userId}, ${postId})`);
         }
-        await this.prisma.$executeRaw(client_1.Prisma.sql `SELECT sp_add_like_and_log(${userId}, ${postId})`);
+        catch (e) {
+            const msg = e instanceof Error ? e.message : String(e);
+            if (msg.includes('LIKE_ALREADY_EXISTS')) {
+                throw new common_1.BadRequestException('Ya diste like a esta publicación');
+            }
+            if (msg.includes('INVALID_USER_OR_POST')) {
+                throw new common_1.NotFoundException('Usuario o publicación inválidos');
+            }
+            throw e;
+        }
         const newCount = post._count.likes + 1;
         this.likesGateway.broadcastLike(postId, newCount);
         return { postId, likesCount: newCount };

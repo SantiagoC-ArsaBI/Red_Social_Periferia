@@ -67,6 +67,14 @@ Deberías ver algo similar a:
 
 **Captura sugerida para el PDF:** Salida de `docker-compose ps` con todos los servicios listados.
 
+**Health checks.** Cada microservicio expone **GET `/health`** para comprobaciones de disponibilidad (p. ej. por orquestadores o monitoreo):
+
+- Auth: http://localhost:3001/health  
+- User: http://localhost:3002/health  
+- Post: http://localhost:3003/health  
+
+La respuesta indica el estado del servicio y de la base de datos.
+
 ---
 
 ### 4. Abrir la aplicación en el navegador
@@ -128,6 +136,16 @@ Para detener y eliminar también los volúmenes (por ejemplo, los datos de la ba
 
 ```bash
 docker-compose down -v
+```
+
+---
+
+## Pruebas automáticas (backend)
+
+En la carpeta `backend/` hay pruebas unitarias (servicios con mocks) y de integración (controladores con supertest). Para ejecutarlas:
+
+```bash
+cd backend && npm test
 ```
 
 ---

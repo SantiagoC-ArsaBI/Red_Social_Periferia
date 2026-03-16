@@ -30,6 +30,35 @@ En cada ruta `/docs` se describe los endpoints de ese servicio (login, perfil, p
 
 ---
 
+## Observabilidad y pruebas
+
+### Health checks
+
+Cada microservicio expone un endpoint **GET `/health`** (sin autenticación) para comprobar disponibilidad y estado de la conexión a PostgreSQL. Útil para orquestadores (Docker, Kubernetes) y monitoreo:
+
+| Servicio      | URL de health              |
+|---------------|----------------------------|
+| Auth Service  | http://localhost:3001/health |
+| User Service  | http://localhost:3002/health |
+| Post Service  | http://localhost:3003/health |
+
+La respuesta incluye el estado del servicio y del indicador `database` (p. ej. `{ "status": "ok", "info": { "database": { "status": "up" } } }`). Implementado con `@nestjs/terminus` y `PrismaHealthIndicator`.
+
+### Pruebas automáticas
+
+En el backend (`backend/`) se incluyen:
+
+- **Pruebas unitarias:** `AuthService`, `UserService` y `PostService` (Jest, mocks de Prisma y dependencias). Archivos: `auth.service.spec.ts`, `user.service.spec.ts`, `post.service.spec.ts`.
+- **Pruebas de integración:** controladores HTTP con módulos de prueba y mocks (supertest). Archivos: `auth.controller.spec.ts`, `user.controller.spec.ts`, `post.controller.spec.ts`.
+
+Para ejecutar todas las pruebas:
+
+```bash
+cd backend && npm test
+```
+
+---
+
 ## Pasos sugeridos para el video demo
 
 1. **Inicio y login (Ana)**  
