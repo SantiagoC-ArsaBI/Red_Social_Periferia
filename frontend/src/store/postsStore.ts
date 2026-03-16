@@ -14,6 +14,7 @@ export interface Post {
   authorId: number;
   author: PostAuthor;
   likesCount: number;
+  likedByMe?: boolean;
 }
 
 interface PostsState {
@@ -29,7 +30,11 @@ interface PostsState {
 export const usePostsStore = create<PostsState>((set) => ({
   posts: [],
   likedPostIds: new Set<number>(),
-  setPosts: (posts) => set({ posts: [...posts] }),
+  setPosts: (posts) =>
+    set({
+      posts: [...posts],
+      likedPostIds: new Set(posts.filter((p) => p.likedByMe === true).map((p) => p.id)),
+    }),
   updateLikeCount: (postId, likesCount) =>
     set((state) => ({
       posts: state.posts.map((p) => (p.id === postId ? { ...p, likesCount } : p)),

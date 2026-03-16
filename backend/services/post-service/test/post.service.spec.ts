@@ -8,7 +8,7 @@ import { PostService } from '../src/post/post.service';
 describe('PostService', () => {
   let service: PostService;
   let prisma: jest.Mocked<
-    Pick<PrismaService, 'post' | '$queryRaw' | '$executeRaw'>
+    Pick<PrismaService, 'post' | 'like' | '$queryRaw' | '$executeRaw'>
   >;
   let likesGateway: jest.Mocked<Pick<LikesGateway, 'broadcastLike'>>;
 
@@ -34,10 +34,13 @@ describe('PostService', () => {
         create: jest.fn(),
         findUnique: jest.fn(),
       },
+      like: {
+        deleteMany: jest.fn(),
+      },
       $queryRaw: jest.fn(),
       $executeRaw: jest.fn(),
     } as unknown as jest.Mocked<
-      Pick<PrismaService, 'post' | '$queryRaw' | '$executeRaw'>
+      Pick<PrismaService, 'post' | 'like' | '$queryRaw' | '$executeRaw'>
     >;
     likesGateway = {
       broadcastLike: jest.fn(),
@@ -100,7 +103,7 @@ describe('PostService', () => {
   });
 
   describe('findAllOtherUsersPosts', () => {
-    it('calls $queryRaw with sp_get_user_feed and maps rows to DTO', async () => {
+    it('calls $queryRaw with sp_get_user_feed and maps rows to DTO including likedByMe', async () => {
       const rows = [
         {
           post_id: 5,
@@ -111,6 +114,7 @@ describe('PostService', () => {
           author_first_name: 'Jane',
           author_last_name: 'Doe',
           author_alias: 'jane',
+          liked_by_me: true,
         },
       ];
       (prisma.$queryRaw as jest.Mock).mockResolvedValue(rows);
@@ -131,6 +135,7 @@ describe('PostService', () => {
           alias: 'jane',
         },
         likesCount: 3,
+        likedByMe: true,
       });
     });
   });
@@ -179,6 +184,46 @@ describe('PostService', () => {
       await expect(service.addLike(1, 10)).rejects.toThrow(NotFoundException);
       await expect(service.addLike(1, 10)).rejects.toThrow('Usuario o publicación inválidos');
       expect(likesGateway.broadcastLike).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('removeLike', () => {
+    const postWithCount = {
+      id: 10,
+      message: 'Post',
+      createdAt: new Date(),
+      authorId: 1,
+      author: mockAuthor,
+      _count: { likes: 2 },
+    };
+
+    it('deletes like, broadcasts new count and returns postId and likesCount', async () => {
+      (prisma.post.findUnique as jest.Mock).mockResolvedValue(postWithCount);
+      (prisma.like.deleteMany as jest.Mock).mockResolvedValue({ count: 1 });
+
+      const result = await service.removeLike(1, 10);
+
+      expect(prisma.like.deleteMany).toHaveBeenCalledWith({ where: { userId: 1, postId: 10 } });
+      expect(result).toEqual({ postId: 10, likesCount: 1 });
+      expect(likesGateway.broadcastLike).toHaveBeenCalledWith(10, 1);
+    });
+
+    it('throws NotFoundException when post does not exist', async () => {
+      (prisma.post.findUnique as jest.Mock).mockResolvedValue(null);
+
+      await expect(service.removeLike(1, 999)).rejects.toThrow(NotFoundException);
+      await expect(service.removeLike(1, 999)).rejects.toThrow('Publicación no encontrada');
+      expect(prisma.like.deleteMany).not.toHaveBeenCalled();
+    });
+
+    it('is idempotent when user had not liked (deleteMany returns 0)', async () => {
+      (prisma.post.findUnique as jest.Mock).mockResolvedValue(postWithCount);
+      (prisma.like.deleteMany as jest.Mock).mockResolvedValue({ count: 0 });
+
+      const result = await service.removeLike(1, 10);
+
+      expect(result).toEqual({ postId: 10, likesCount: 2 });
+      expect(likesGateway.broadcastLike).toHaveBeenCalledWith(10, 2);
     });
   });
 });

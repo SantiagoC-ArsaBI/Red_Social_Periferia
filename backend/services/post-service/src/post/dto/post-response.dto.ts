@@ -14,4 +14,5 @@ export class PostResponseDto {
   @ApiProperty() authorId!: number;
   @ApiProperty({ type: PostAuthorDto }) author!: PostAuthorDto;
   @ApiProperty() likesCount!: number;
+  @ApiProperty({ required: false }) likedByMe?: boolean;
 }

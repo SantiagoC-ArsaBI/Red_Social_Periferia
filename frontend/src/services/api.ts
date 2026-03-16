@@ -74,4 +74,9 @@ export const postApi = {
       `${POST_API_URL}/posts/${postId}/like`,
       { method: 'POST' }
     ),
+  unlikePost: (postId: number) =>
+    fetchJson<{ postId: number; likesCount: number }>(
+      `${POST_API_URL}/posts/${postId}/like`,
+      { method: 'DELETE' }
+    ),
 };

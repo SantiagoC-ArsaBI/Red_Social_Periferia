@@ -37,6 +37,7 @@ export class PostService {
         author_first_name: string;
         author_last_name: string;
         author_alias: string;
+        liked_by_me: boolean;
       }>
     >(Prisma.sql`SELECT * FROM sp_get_user_feed(${userId})`);
 
@@ -52,6 +53,7 @@ export class PostService {
         alias: r.author_alias,
       },
       likesCount: r.likes_count,
+      likedByMe: r.liked_by_me,
     }));
   }
 
@@ -81,6 +83,25 @@ export class PostService {
       throw e;
     }
     const newCount = post._count.likes + 1;
+    this.likesGateway.broadcastLike(postId, newCount);
+    return { postId, likesCount: newCount };
+  }
+
+  /**
+   * Quita el like del usuario al post. Idempotente si no existía el like.
+   */
+  async removeLike(userId: number, postId: number): Promise<{ postId: number; likesCount: number }> {
+    const post = await this.prisma.post.findUnique({
+      where: { id: postId },
+      include: { _count: { select: { likes: true } } },
+    });
+    if (!post) {
+      throw new NotFoundException('Publicación no encontrada');
+    }
+    const deleted = await this.prisma.like.deleteMany({
+      where: { userId, postId },
+    });
+    const newCount = Math.max(0, post._count.likes - deleted.count);
     this.likesGateway.broadcastLike(postId, newCount);
     return { postId, likesCount: newCount };
   }

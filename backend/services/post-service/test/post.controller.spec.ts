@@ -23,7 +23,7 @@ class MockJwtGuard implements CanActivate {
 
 describe('PostController (integration)', () => {
   let app: INestApplication;
-  let postService: jest.Mocked<Pick<PostService, 'findAllOtherUsersPosts' | 'addLike' | 'create'>>;
+  let postService: jest.Mocked<Pick<PostService, 'findAllOtherUsersPosts' | 'addLike' | 'removeLike' | 'create'>>;
 
   const mockPost = {
     id: 1,
@@ -38,6 +38,7 @@ describe('PostController (integration)', () => {
     postService = {
       findAllOtherUsersPosts: jest.fn(),
       addLike: jest.fn(),
+      removeLike: jest.fn(),
       create: jest.fn(),
     };
 
@@ -85,6 +86,20 @@ describe('PostController (integration)', () => {
 
       expect(postService.addLike).toHaveBeenCalledWith(1, 5);
       expect(res.body).toEqual({ postId: 5, likesCount: 3 });
+    });
+  });
+
+  describe('DELETE /posts/:id/like', () => {
+    it('returns 200 and postId, likesCount', async () => {
+      postService.removeLike.mockResolvedValue({ postId: 5, likesCount: 2 });
+
+      const res = await request(app.getHttpServer())
+        .delete('/posts/5/like')
+        .set('Authorization', 'Bearer any-token')
+        .expect(200);
+
+      expect(postService.removeLike).toHaveBeenCalledWith(1, 5);
+      expect(res.body).toEqual({ postId: 5, likesCount: 2 });
     });
   });
 });

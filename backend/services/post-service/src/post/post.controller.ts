@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../common/jwt-auth.guard';
 import { CreatePostDto } from './dto/create-post.dto';
@@ -28,7 +28,7 @@ export class PostController {
   @Get()
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Listar publicaciones de otros usuarios' })
+  @ApiOperation({ summary: 'Listar publicaciones (todas, incluidas las propias)' })
   @ApiResponse({ status: 200, description: 'Lista de publicaciones', type: [PostResponseDto] })
   async findAll(@Req() req: { user: { id: number } }): Promise<PostResponseDto[]> {
     return this.postService.findAllOtherUsersPosts(req.user.id);
@@ -47,5 +47,18 @@ export class PostController {
     @Param('id', ParsePositiveIntPipe) postId: number,
   ): Promise<{ postId: number; likesCount: number }> {
     return this.postService.addLike(req.user.id, postId);
+  }
+
+  @Delete(':id/like')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Quitar like' })
+  @ApiResponse({ status: 200, description: 'Like eliminado', schema: { properties: { postId: { type: 'number' }, likesCount: { type: 'number' } } } })
+  @ApiResponse({ status: 404, description: 'Publicación no encontrada' })
+  async unlike(
+    @Req() req: { user: { id: number } },
+    @Param('id', ParsePositiveIntPipe) postId: number,
+  ): Promise<{ postId: number; likesCount: number }> {
+    return this.postService.removeLike(req.user.id, postId);
   }
 }

@@ -24,16 +24,18 @@ export function PostCard({ post }: PostCardProps) {
   const { updateLikeCount, setLikedByMe, likedPostIds } = usePostsStore();
   const liked = likedPostIds.has(post.id);
 
-  const handleLike = async () => {
+  const handleToggleLike = async () => {
     if (loading) return;
     setError(null);
     setLoading(true);
     try {
-      const res = await postApi.likePost(post.id);
-      setLikedByMe(post.id, true);
+      const res = liked
+        ? await postApi.unlikePost(post.id)
+        : await postApi.likePost(post.id);
+      setLikedByMe(post.id, !liked);
       updateLikeCount(post.id, res.likesCount);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error al dar like');
+      setError(e instanceof Error ? e.message : (liked ? 'Error al quitar like' : 'Error al dar like'));
     } finally {
       setLoading(false);
     }
@@ -53,14 +55,14 @@ export function PostCard({ post }: PostCardProps) {
       <div className="mt-4 flex items-center gap-3">
         <button
           type="button"
-          onClick={handleLike}
+          onClick={handleToggleLike}
           disabled={loading}
           className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition ${
             liked
               ? 'bg-red-50 text-red-600 hover:bg-red-100'
               : 'bg-surface-100 text-slate-600 hover:bg-surface-200'
           } ${loading ? 'opacity-60' : ''}`}
-          aria-label="Dar like"
+          aria-label={liked ? 'Quitar like' : 'Dar like'}
         >
           <span className="text-lg" role="img" aria-hidden>
             {liked ? '❤️' : '🤍'}

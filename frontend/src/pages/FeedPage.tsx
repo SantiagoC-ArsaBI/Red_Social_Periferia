@@ -51,7 +51,7 @@ export function FeedPage() {
   if (posts.length === 0) {
     return (
       <p className="rounded-xl border border-surface-200 bg-white p-8 text-center text-slate-500">
-        No hay publicaciones de otros usuarios. Crea una o pide a alguien más que publique.
+        No hay publicaciones. Crea una para verla aquí.
       </p>
     );
   }
