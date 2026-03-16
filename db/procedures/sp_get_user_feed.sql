@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION sp_get_user_feed(p_user_id INTEGER)
+CREATE OR REPLACE FUNCTION sp_get_user_feed(p_user_id BIGINT)
 RETURNS TABLE (
   post_id INTEGER,
   author_id INTEGER,

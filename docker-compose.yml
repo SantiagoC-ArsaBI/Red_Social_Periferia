@@ -84,10 +84,11 @@ services:
     build:
       context: ./frontend
       args:
-        VITE_AUTH_API_URL: http://localhost:3001
-        VITE_USER_API_URL: http://localhost:3002
-        VITE_POST_API_URL: http://localhost:3003
-        VITE_WS_LIKES_URL: http://localhost:3003
+        # Rutas relativas: el navegador pide a localhost:5173/api/... y nginx hace proxy al backend (evita CORS)
+        VITE_AUTH_API_URL: /api
+        VITE_USER_API_URL: /api
+        VITE_POST_API_URL: /api
+        VITE_WS_LIKES_URL: http://localhost:5173
     container_name: frontend
     depends_on:
       auth-service:

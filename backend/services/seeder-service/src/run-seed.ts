@@ -4,7 +4,7 @@ import * as bcrypt from 'bcrypt';
 const prisma = new PrismaClient();
 
 const SP_ADD_LIKE_AND_LOG = `
-CREATE OR REPLACE FUNCTION sp_add_like_and_log(p_user_id INTEGER, p_post_id INTEGER)
+CREATE OR REPLACE FUNCTION sp_add_like_and_log(p_user_id BIGINT, p_post_id BIGINT)
 RETURNS VOID AS $$
 BEGIN
   INSERT INTO "Like" ("userId", "postId", "createdAt") VALUES (p_user_id, p_post_id, NOW());
@@ -19,7 +19,7 @@ $$ LANGUAGE plpgsql;
 `;
 
 const SP_GET_USER_FEED = `
-CREATE OR REPLACE FUNCTION sp_get_user_feed(p_user_id INTEGER)
+CREATE OR REPLACE FUNCTION sp_get_user_feed(p_user_id BIGINT)
 RETURNS TABLE (
   post_id INTEGER,
   author_id INTEGER,

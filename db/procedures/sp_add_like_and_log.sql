@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION sp_add_like_and_log(p_user_id INTEGER, p_post_id INTEGER)
+CREATE OR REPLACE FUNCTION sp_add_like_and_log(p_user_id BIGINT, p_post_id BIGINT)
 RETURNS VOID AS $$
 BEGIN
   INSERT INTO "Like" ("userId", "postId", "createdAt")
