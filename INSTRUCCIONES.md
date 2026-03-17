@@ -18,8 +18,6 @@ Este documento describe cómo ejecutar el proyecto completo con Docker Compose. 
 
 Si aún no lo has hecho, clona el repositorio y abre una terminal en la **raíz del proyecto** (donde está el archivo `docker-compose.yml`).
 
-**Captura sugerida para el PDF:** Carpeta del proyecto abierta en el explorador o en la terminal mostrando `docker-compose.yml`.
-
 ---
 
 ### 2. Levantar todos los servicios
@@ -39,8 +37,6 @@ docker compose up --build
 - La primera vez se construirán las imágenes (backend, frontend, seeder) y puede tardar varios minutos.
 - El **seeder** se ejecuta una sola vez al inicio: aplica el esquema de la base de datos con Prisma, **crea o actualiza los stored procedures** (`sp_add_like_and_log`, `sp_get_user_feed`) y luego inserta los usuarios de prueba y una publicación por cada uno. No hace falta ejecutar scripts SQL manuales: los procedimientos almacenados son desplegados automáticamente por este servicio.
 - Deja la terminal abierta para ver los logs; los servicios quedarán en ejecución.
-
-**Captura sugerida para el PDF:** Terminal con la salida de `docker-compose up --build` mostrando que los contenedores están running (postgres, auth-service, user-service, post-service, frontend, y el seeder que finaliza).
 
 **Stored Procedures.** El servicio `seeder-service` es el encargado de crear y actualizar los procedimientos almacenados principales (`sp_add_like_and_log`, `sp_get_user_feed`) al inicio. Así se garantiza que la lógica de likes (incluyendo auditoría) y el feed de publicaciones queda desplegada automáticamente al levantar el entorno con Docker; no se requieren pasos manuales ni scripts SQL adicionales.
 
@@ -65,8 +61,6 @@ Deberías ver algo similar a:
 | frontend      | 5173    | Up       |
 | seeder        | —       | Exit 0   |
 
-**Captura sugerida para el PDF:** Salida de `docker-compose ps` con todos los servicios listados.
-
 **Health checks.** Cada microservicio expone **GET `/health`** para comprobaciones de disponibilidad (p. ej. por orquestadores o monitoreo):
 
 - Auth: http://localhost:3001/health  
@@ -84,8 +78,6 @@ Abre tu navegador y accede a:
 **http://localhost:5173**
 
 Verás la pantalla de **Login** de la Red Social.
-
-**Captura sugerida para el PDF:** Pantalla de login de la aplicación (formulario con correo y contraseña).
 
 ---
 
@@ -107,8 +99,7 @@ Tras levantar el proyecto, puedes usar los usuarios creados por el seeder. Todos
 4. Ir a **Crear publicación**, escribir un mensaje y publicar.
 5. Abrir una **ventana de incógnito** (o otra pestaña), iniciar sesión con `carlos@test.com` / `clave123`.
 6. En una pestaña dar **Like** a una publicación; en la otra pestaña (con otro usuario o la misma) ver cómo el **contador de likes se actualiza en tiempo real** sin recargar la página.
-
-**Captura sugerida para el PDF:** Feed con varias publicaciones y el botón de like visible; opcionalmente, dos ventanas (normal e incógnito) mostrando el mismo post con el contador de likes actualizado en tiempo real.
+7. Desde una de las pestañas crear una **nueva publicación** y comprobar que aparece automáticamente en el feed de la otra pestaña, sin recargar.
 
 ---
 
@@ -119,8 +110,6 @@ Con los servicios en ejecución, puedes consultar la documentación de la API en
 - **Auth Service:** http://localhost:3001/docs  
 - **User Service:** http://localhost:3002/docs  
 - **Post Service:** http://localhost:3003/docs  
-
-**Captura sugerida para el PDF:** Una de las páginas de Swagger (por ejemplo `/docs` del Post Service) mostrando los endpoints documentados.
 
 ---
 
@@ -160,16 +149,5 @@ cd backend && npm test
 | Post Service | 3003   | Publicaciones y likes (HTTP y WebSocket) |
 | PostgreSQL   | 5432   | Base de datos                |
 
----
-
-## Generación del PDF
-
-Para generar el PDF a partir de este documento:
-
-1. Incluir en el documento las capturas de pantalla en los puntos indicados como “Captura sugerida para el PDF”.
-2. Usar cualquier herramienta de conversión Markdown → PDF (por ejemplo: Pandoc, VS Code con extensión “Markdown PDF”, o exportar desde un editor que soporte Markdown).
-3. Revisar que el índice o numeración de secciones sea correcto en el PDF final.
-
----
 
 *Documento preparado para la prueba técnica de Red Social con arquitectura de microservicios — Periferia IT Group.*

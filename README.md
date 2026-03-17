@@ -1,6 +1,6 @@
 # Red Social — Periferia IT Group (Prueba Técnica)
 
-Red social con arquitectura de microservicios: autenticación JWT, perfiles, publicaciones y likes en tiempo real vía WebSocket. Backend en Node.js (NestJS) y frontend en React (TypeScript, Zustand).
+Red social con arquitectura de microservicios: autenticación JWT, perfiles, publicaciones y likes en tiempo real vía WebSocket. Backend en Node.js (NestJS) y frontend en React (TypeScript, Zustand). Las **publicaciones nuevas** también se propagan en tiempo real al feed de otros usuarios conectados.
 
 ## Cómo ejecutar el proyecto
 
@@ -73,8 +73,9 @@ cd backend && npm test
 4. **Segundo usuario (Carlos) en incógnito**  
    Abrir una ventana de incógnito (o otro navegador), ir a http://localhost:5173 e iniciar sesión con `carlos@test.com` / `clave123`. Dejar esta ventana con el Feed visible.
 
-5. **Like y tiempo real**  
-   En la ventana normal (Ana), dar “Like” a una publicación. En la ventana de incógnito (Carlos) mostrar que el **contador de likes de esa publicación se actualiza al instante** sin recargar la página. Opcional: dar like desde incógnito y mostrar el cambio en la pestaña de Ana.
+5. **Likes y publicaciones en tiempo real**  
+   En la ventana normal (Ana), dar “Like” a una publicación. En la ventana de incógnito (Carlos) mostrar que el **contador de likes de esa publicación se actualiza al instante** sin recargar la página.  
+   Luego, desde una de las ventanas crear una **nueva publicación** y comprobar que aparece automáticamente en el feed de la otra ventana (otro usuario) gracias al mismo WebSocket del Post Service.
 
 6. **Cierre**  
    Mencionar que el contador se mantiene sincronizado entre pestañas gracias al WebSocket del Post Service.
