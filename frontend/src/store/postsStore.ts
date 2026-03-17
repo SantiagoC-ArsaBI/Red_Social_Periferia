@@ -43,9 +43,13 @@ export const usePostsStore = create<PostsState>((set) => ({
       };
     }),
   prependPost: (post) =>
-    set((state) => ({
-      posts: [{ ...post, likedByMe: post.likedByMe ?? false }, ...state.posts],
-    })),
+    set((state) => {
+      const normalized: Post = { ...post, likedByMe: post.likedByMe ?? false };
+      const withoutDup = state.posts.filter((p) => p.id !== normalized.id);
+      return {
+        posts: [normalized, ...withoutDup],
+      };
+    }),
   updateLikeCount: (postId, likesCount) =>
     set((state) => ({
       posts: state.posts.map((p) => (p.id === postId ? { ...p, likesCount } : p)),

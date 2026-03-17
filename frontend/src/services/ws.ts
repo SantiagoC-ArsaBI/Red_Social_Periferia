@@ -1,6 +1,6 @@
 import { io } from 'socket.io-client';
 import { WS_LIKES_URL } from '../config/env';
-import { usePostsStore } from '../store/postsStore';
+import { usePostsStore, type Post } from '../store/postsStore';
 
 let socket: ReturnType<typeof io> | null = null;
 
@@ -16,6 +16,9 @@ export function connectLikesSocket(): void {
   });
   socket.on('like', (payload: { postId: number; likesCount: number }) => {
     usePostsStore.getState().updateLikeCount(payload.postId, payload.likesCount);
+  });
+  socket.on('post_created', (post: Post) => {
+    usePostsStore.getState().prependPost(post);
   });
   socket.on('disconnect', () => {
     console.debug('[WS] Likes socket disconnected');

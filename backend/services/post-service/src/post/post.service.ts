@@ -23,7 +23,9 @@ export class PostService {
         _count: { select: { likes: true } },
       },
     });
-    return this.toResponse(post);
+    const response = this.toResponse(post);
+    this.likesGateway.broadcastNewPost(response);
+    return response;
   }
 
   async findAllOtherUsersPosts(userId: number): Promise<PostResponseDto[]> {
