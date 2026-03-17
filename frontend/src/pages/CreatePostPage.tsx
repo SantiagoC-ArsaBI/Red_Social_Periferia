@@ -1,11 +1,15 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { postApi } from '../services/api';
+import { useAuthStore } from '../store/authStore';
+import { usePostsStore } from '../store/postsStore';
 
 const MAX_MESSAGE_LENGTH = 2000;
 
 export function CreatePostPage() {
   const navigate = useNavigate();
+  const user = useAuthStore((s) => s.user);
+  const { prependPost, setPosts } = usePostsStore();
   const [message, setMessage] = useState('');
   const [createdAt, setCreatedAt] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -30,10 +34,34 @@ export function CreatePostPage() {
     if (!validate()) return;
     setLoading(true);
     try {
-      await postApi.createPost(
-        message.trim(),
-        createdAt.trim() ? new Date(createdAt).toISOString() : undefined
-      );
+      const trimmedMessage = message.trim();
+      const createdAtIso = createdAt.trim()
+        ? new Date(createdAt).toISOString()
+        : new Date().toISOString();
+      const created = await postApi.createPost(trimmedMessage, createdAt.trim() || undefined);
+      const id = created.id;
+      if (!Number.isInteger(id) || id < 1) {
+        // Si por algún motivo no recibimos un id válido, recargamos el feed completo
+        const data = await postApi.getPosts();
+        setPosts(data);
+        navigate('/', { replace: true });
+        return;
+      }
+      const author =
+        created.author ||
+        (user
+          ? { id: user.id, firstName: user.firstName, lastName: user.lastName, alias: user.alias }
+          : { id: created.authorId, firstName: '', lastName: '', alias: '' });
+      const postToPrepend = {
+        id,
+        message: created.message ?? trimmedMessage,
+        createdAt: created.createdAt ?? createdAtIso,
+        authorId: created.authorId ?? user?.id ?? 0,
+        author,
+        likesCount: created.likesCount ?? 0,
+        likedByMe: false,
+      };
+      prependPost(postToPrepend);
       navigate('/', { replace: true });
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error al publicar');

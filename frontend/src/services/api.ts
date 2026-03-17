@@ -63,9 +63,9 @@ export const userApi = {
 
 export const postApi = {
   getPosts: () =>
-    fetchJson<Post[]>(`${POST_API_URL}/posts`),
+    fetchJson<Post[]>(`${POST_API_URL}/posts/`),
   createPost: (message: string, createdAt?: string) =>
-    fetchJson<Post>(`${POST_API_URL}/posts`, {
+    fetchJson<Post>(`${POST_API_URL}/posts/`, {
       method: 'POST',
       body: JSON.stringify({ message, ...(createdAt && { createdAt }) }),
     }),

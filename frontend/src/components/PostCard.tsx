@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Post } from '../store/postsStore';
 import { postApi } from '../services/api';
 import { usePostsStore } from '../store/postsStore';
@@ -8,7 +8,9 @@ interface PostCardProps {
 }
 
 function formatDate(iso: string): string {
+  if (!iso || typeof iso !== 'string') return 'Ahora';
   const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return 'Ahora';
   return d.toLocaleDateString('es-ES', {
     day: '2-digit',
     month: 'short',
@@ -23,9 +25,14 @@ export function PostCard({ post }: PostCardProps) {
   const [error, setError] = useState<string | null>(null);
   const { updateLikeCount, setLikedByMe, likedPostIds } = usePostsStore();
   const liked = likedPostIds.has(post.id);
+  const canLike = Number.isInteger(post.id) && post.id > 0;
+
+  useEffect(() => {
+    if (!canLike) setError(null);
+  }, [canLike]);
 
   const handleToggleLike = async () => {
-    if (loading) return;
+    if (loading || !canLike) return;
     setError(null);
     setLoading(true);
     try {
@@ -41,13 +48,15 @@ export function PostCard({ post }: PostCardProps) {
     }
   };
 
+  const author = post.author ?? { id: 0, firstName: '', lastName: '', alias: '' };
+
   return (
     <article className="rounded-xl border border-surface-200 bg-white p-5 shadow-sm transition hover:shadow-md">
       <div className="mb-3 flex items-center gap-2 text-sm text-slate-500">
         <span className="font-medium text-slate-800">
-          {post.author.firstName} {post.author.lastName}
+          {author.firstName} {author.lastName}
         </span>
-        <span>@{post.author.alias}</span>
+        <span>@{author.alias}</span>
         <span>·</span>
         <time dateTime={post.createdAt}>{formatDate(post.createdAt)}</time>
       </div>
@@ -56,7 +65,7 @@ export function PostCard({ post }: PostCardProps) {
         <button
           type="button"
           onClick={handleToggleLike}
-          disabled={loading}
+          disabled={loading || !canLike}
           className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition ${
             liked
               ? 'bg-red-50 text-red-600 hover:bg-red-100'

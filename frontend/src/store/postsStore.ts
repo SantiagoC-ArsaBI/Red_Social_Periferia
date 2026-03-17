@@ -20,6 +20,8 @@ export interface Post {
 interface PostsState {
   posts: Post[];
   setPosts: (posts: Post[]) => void;
+  /** Añade una publicación al inicio (p. ej. tras crear una nueva). */
+  prependPost: (post: Post) => void;
   /** Actualiza solo el likesCount de un post (para WebSocket real-time, incluso en otra pestaña). */
   updateLikeCount: (postId: number, likesCount: number) => void;
   /** Marca que el usuario dio like en este post (para UI). */
@@ -31,10 +33,19 @@ export const usePostsStore = create<PostsState>((set) => ({
   posts: [],
   likedPostIds: new Set<number>(),
   setPosts: (posts) =>
-    set({
-      posts: [...posts],
-      likedPostIds: new Set(posts.filter((p) => p.likedByMe === true).map((p) => p.id)),
+    set((state) => {
+      const fromApi = posts;
+      const onlyLocal = state.posts.filter((p) => !fromApi.some((d) => d.id === p.id));
+      const merged = [...onlyLocal, ...fromApi];
+      return {
+        posts: merged,
+        likedPostIds: new Set(fromApi.filter((p) => p.likedByMe === true).map((p) => p.id)),
+      };
     }),
+  prependPost: (post) =>
+    set((state) => ({
+      posts: [{ ...post, likedByMe: post.likedByMe ?? false }, ...state.posts],
+    })),
   updateLikeCount: (postId, likesCount) =>
     set((state) => ({
       posts: state.posts.map((p) => (p.id === postId ? { ...p, likesCount } : p)),
